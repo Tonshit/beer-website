@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Receipt</title>
+    <!-- Favicon Link -->
+    <link rel="icon" href="https://static.vecteezy.com/system/resources/thumbnails/044/277/504/small_2x/two-beer-mugs-splash-toast-cheers-on-isolated-transparent-background-png.png" type="image/png"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="receipt.css"> <!-- Link to the external CSS file -->
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="nav-links">
+        <a href="frontcover.html"><i class="fas fa-home mr-2"></i>HOME</a>
+        <a href="beer.html"><i class="fas fa-beer mr-2"></i>BEERS</a>
+        <a href="about.html"><i class="fas fa-info-circle mr-2"></i>ABOUT</a>
+        <a href="cart.html"><i class="fas fa-shopping-cart mr-2"></i>CART</a>
+        <a href="contact.html"><i class="fas fa-envelope mr-2"></i>CONTACT</a>
+    </div>
+    <div class="container">
+        <div class="receipt-container">
+            <h2 class="text-3xl font-bold mb-4 text-black-600">Receipt</h2>
+            <p id="receipt-date" class="text-center text-lg font-semibold"></p> <!-- Date added here -->
+            <h3 class="text-lg font-semibold">Order Information</h3>
+            <p id="customer-name" class="text-center"></p>
+            <p id="customer-address" class="text-center"></p>
+            <p id="customer-number" class="text-center"></p>
+            <p id="shipping-message" class="text-center text-green-600 font-semibold"></p>
+
+            <h3 class="text-lg font-semibold mt-4">Items Purchased</h3>
+            <table id="cart-items-receipt">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Items will be dynamically inserted here -->
+                </tbody>
+            </table>
+
+            <div class="total-price-container">
+                <div id="total-price-receipt" class="text-2xl font-bold text-center"></div>
+            </div>
+
+            <button onclick="window.location.href='cart.html'" class="bg-blue-500 text-white px-4 py-2 rounded mt-4 w-full">Back to Cart</button>
+        </div>
+
+        <div class="thank-you-container">
+            <h2 class="text-3xl font-bold mb-4 text-black">Thank You!</h2>
+            <p class="text-center">We appreciate your business and hope you enjoy your purchase. Your support means a lot to us!</p>
+            <p class="text-center">At our company, we strive to provide the best products and services to our customers. If you have any questions or need assistance, feel free to reach out to our customer service team. We are here to help you with any inquiries or concerns you may have.</p>
+
+            <!-- Contact Information Section -->
+            <div class="contact-info mt-4">
+                <h3 class="text-lg font-semibold">Contact us if you have some issues:</h3>
+                <p>Email: <a href="mailto:craftbeer@gmail.com" class="text-blue-500">craftbeer@gmail.com</a></p>
+                <p>Phone: <a href="tel:+1234567890" class="text-blue-500"> +1 (234) 567-890</a></p>
+                <p>Address: 123 Beer St, Brew City, BC 12345</p>
+            </div>
+
+            
+                <h3 class="text-lg font-semibold text-center">Choose to Pay</h3>
+                <div class="flex justify-center mt-4">
+                    <button onclick="selectPayment('cod')" class="bg-blue-500 text-white px-4 py-2 rounded mx-2">Cash on Delivery</button>
+                    <button onclick="selectPayment('gcash')" class="bg-green-500 text-white px-4 py-2 rounded mx-2">Pay Online</button>
+                </div>
+                <p id="payment-message" class="text-center mt-4 hidden"></p>
+            </div>
+            <div id="gcash-options" class="hidden mt-4 text-center">
+                <p class="font-semibold">Scan here to pay.</p>
+                <img src="st_small_507x507-pad_600x600_f8f8f8.u12-removebg-preview.png" alt="Gcash QR Code" class="mx-auto mt-2"/>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatCurrency(value) {
+            return '₱ ' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function loadReceipt() {
+            const name = localStorage.getItem('customerName');
+            const address = localStorage.getItem('customerAddress');
+            const number = localStorage.getItem('customerNumber');
+            const date = new Date().toLocaleDateString(); // Get current date
+
+            // Set the date in the receipt
+            document.getElementById('receipt-date').innerText = `Date: ${date}`;
+
+            document.getElementById('customer-name').innerText = `Name: ${name}`;
+            document.getElementById('customer-address').innerText = `Address: ${address}`;
+            document.getElementById('customer-number').innerText = `Phone Number: ${number}`;
+            document.getElementById('shipping-message').innerText = `Your items have been shipped to: ${address}`;
+
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartItemsContainer = document.getElementById('cart-items-receipt').getElementsByTagName('tbody')[0];
+            cartItemsContainer.innerHTML = '';
+            let totalPrice = 0;
+
+            cart.forEach(item => {
+                const price = parseFloat(item.price.replace('₱', '').replace(/,/g, ''));
+                const subtotal = (price * item.quantity).toFixed(2);
+                totalPrice += parseFloat(subtotal);
+                
+                const row = cartItemsContainer.insertRow();
+                const cellName = row.insertCell(0);
+                const cellQuantity = row.insertCell(1);
+                const cellTotal = row.insertCell(2);
+                
+                cellName.innerText = item.name;
+                cellQuantity.innerText = item.quantity;
+                cellTotal.innerText = formatCurrency(subtotal);
+            });
+
+            document.getElementById('total-price-receipt').innerText = `Total Price: ${formatCurrency(totalPrice.toFixed(2))}`;
+
+            // Store buyer information in local storage
+            const buyerInfo = {
+                date: date, // Add date here
+                name: name,
+                address: address,
+                number: number,
+                totalPrice: totalPrice
+            };
+            const buyers = JSON.parse(localStorage.getItem('buyers')) || [];
+            buyers.push(buyerInfo);
+            localStorage.setItem('buyers', JSON.stringify(buyers));
+        }
+
+        function selectPayment(method) {
+            const gcashOptions = document.getElementById('gcash-options');
+            const paymentMessage = document.getElementById('payment-message');
+            if (method === 'gcash') {
+                gcashOptions.classList.remove('hidden');
+                paymentMessage.classList.add('hidden');
+            } else if (method === 'cod') {
+                gcashOptions.classList.add('hidden');
+                paymentMessage.innerText = "You have selected Cash on Delivery. Please prepare the exact amount.";
+                paymentMessage.classList.remove('hidden');
+            }
+        }
+
+        window.onload = loadReceipt;
+    </script>
+</body>
+</html>
